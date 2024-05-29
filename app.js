@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const socket = require("socket.io");
 const http = require("http");
@@ -62,6 +63,6 @@ io.on("connection", function (uniquesocket) {
     });
 });
 
-server.listen(3000, function () {
+server.listen(process.constrainedMemory.PORT, function () {
     console.log("Listening on port 3000");
 });
