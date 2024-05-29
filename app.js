@@ -1,4 +1,6 @@
 require("dotenv").config();
+
+const PORT = process.env.PORT || 3000;
 const express = require("express");
 const socket = require("socket.io");
 const http = require("http");
@@ -38,8 +40,10 @@ io.on("connection", function (uniquesocket) {
         console.log("Disconnected", uniquesocket.id);
         if (uniquesocket.id === players.white) {
             delete players.white;
+            io.emit("playerDisconnected", "w");
         } else if (uniquesocket.id === players.black) {
             delete players.black;
+            io.emit("playerDisconnected", "b");
         }
     });
 
@@ -54,15 +58,15 @@ io.on("connection", function (uniquesocket) {
                 io.emit("boardState", chess.fen());
             } else {
                 console.log("Invalid Move:", move);
-                uniquesocket.emit("Invalid move", move);
+                uniquesocket.emit("invalidMove", move);
             }
         } catch (err) {
             console.log(err);
-            uniquesocket.emit("Invalid move", move);
+            uniquesocket.emit("invalidMove", move);
         }
     });
 });
 
-server.listen(process.constrainedMemory.PORT, function () {
-    console.log("Listening on port 3000");
+server.listen(PORT, function () {
+    console.log("Listening on port", PORT);
 });
