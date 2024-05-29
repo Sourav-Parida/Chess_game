@@ -30,7 +30,8 @@ app.get("/favicon.png", (req, res) => {
 // Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, "public")));
 
-let players = [];
+let whitePlayer = null;
+let blackPlayer = null;
 
 app.get("/", (req, res) => {
     // Render the "index" view
@@ -40,10 +41,14 @@ app.get("/", (req, res) => {
 io.on("connection", (socket) => {
     console.log("Connected", socket.id);
 
-    if (players.length < 2) {
-        players.push(socket.id);
-        const role = players.length === 1 ? "w" : "b";
-        socket.emit("playerRole", role);
+    // Assign players based on availability
+    if (!whitePlayer) {
+        whitePlayer = socket.id;
+        socket.emit("playerRole", "w");
+    } else if (!blackPlayer) {
+        blackPlayer = socket.id;
+        socket.emit("playerRole", "b");
+        io.emit("gameStart"); // Notify both players that the game has started
     } else {
         socket.emit("spectatorRole");
         socket.emit("boardState", chess.fen());
@@ -51,18 +56,20 @@ io.on("connection", (socket) => {
 
     socket.on("disconnect", () => {
         console.log("Disconnected", socket.id);
-        const index = players.indexOf(socket.id);
-        if (index !== -1) {
-            players.splice(index, 1);
-            io.emit("playerDisconnected", index === 0 ? "w" : "b");
+        if (socket.id === whitePlayer) {
+            whitePlayer = null;
+        } else if (socket.id === blackPlayer) {
+            blackPlayer = null;
         }
+        io.emit("playerDisconnected");
     });
 
     socket.on("move", (move) => {
         try {
-            const playerIndex = players.indexOf(socket.id);
-            if (playerIndex === -1 || (chess.turn() === "w" && playerIndex !== 0) || (chess.turn() === "b" && playerIndex !== 1)) {
-                return;
+            // Ensure only the player whose turn it is can make a move
+            const currentPlayer = chess.turn() === "w" ? whitePlayer : blackPlayer;
+            if (socket.id !== currentPlayer) {
+                return socket.emit("invalidMove", "It's not your turn!");
             }
 
             const result = chess.move(move);
@@ -70,12 +77,11 @@ io.on("connection", (socket) => {
                 io.emit("move", move);
                 io.emit("boardState", chess.fen());
             } else {
-                console.log("Invalid Move:", move);
-                socket.emit("invalidMove", move);
+                socket.emit("invalidMove", "Invalid move!");
             }
         } catch (err) {
             console.error(err);
-            socket.emit("invalidMove", move);
+            socket.emit("invalidMove", "An error occurred while processing your move.");
         }
     });
 });
