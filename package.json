@@ -2,7 +2,7 @@
     "name": "chess-app",
     "version": "1.0.0",
     "description": "A simple multiplayer chess game",
-    "main": "app.js",
+    "main": "index.js",
     "scripts": {
       "start": "node app.js",
       "dev": "nodemon app.js"
