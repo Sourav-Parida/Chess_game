@@ -7,6 +7,15 @@ const { Chess } = require("chess.js");
 const path = require("path");
 
 const app = express();
+
+app.get("/favicon.ico", (req, res) => {
+    res.status(204).end();
+});
+
+app.get("/favicon.png", (req, res) => {
+    res.status(204).end();
+});
+
 const server = http.createServer(app);
 const io = socket(server);
 const chess = new Chess();
