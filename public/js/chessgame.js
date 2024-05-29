@@ -162,6 +162,11 @@ socket.on("move", function (move) {
     renderBoard();
 });
 
+socket.on("move", function (move) {
+    chess.move(move);
+    renderBoard();
+});
+
 socket.on("showStartGamePopup", function () {
     const startGamePopup = document.createElement("div");
     startGamePopup.classList.add("popup");
