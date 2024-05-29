@@ -13,10 +13,6 @@ const PORT = process.env.PORT || 3000;
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
 
-app.get("/favicon.ico", (req, res) => {
-    res.status(204).end();
-});
-
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", (req, res) => {
@@ -40,9 +36,12 @@ io.on("connection", (socket) => {
             if (!availableGame.whitePlayer) {
                 playerRole = "w";
                 availableGame.whitePlayer = socket.id;
-            } else {
+            } else if (!availableGame.blackPlayer) {
                 playerRole = "b";
                 availableGame.blackPlayer = socket.id;
+            } else {
+                playerRole = "spectator";
+                availableGame.spectators.push(socket.id);
             }
             socket.join(gameId);
         } else {
