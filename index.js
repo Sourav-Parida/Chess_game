@@ -36,30 +36,33 @@ io.on("connection", (socket) => {
 
     socket.on("joinGame", () => {
         let gameId;
-        for (const id in games) {
-            if (!games[id].blackPlayer) {
-                gameId = id;
-                break;
-            }
-        }
+        let playerRole;
+        
+        // Check if there's an existing game waiting for a second player
+        const waitingGame = Object.values(games).find(game => !game.blackPlayer);
 
-        if (!gameId) {
+        if (waitingGame) {
+            gameId = waitingGame.id;
+            playerRole = "b";
+            waitingGame.blackPlayer = socket.id;
+            socket.join(gameId);
+            socket.emit("playerRole", { role: playerRole, gameId });
+            io.to(gameId).emit("gameStart");
+            io.to(gameId).emit("playerJoined", { playerId: socket.id, role: playerRole });
+        } else {
+            // Create a new game
             gameId = uuidv4();
+            playerRole = "w";
             games[gameId] = {
+                id: gameId,
                 chess: new Chess(),
                 whitePlayer: socket.id,
                 blackPlayer: null,
                 spectators: [],
             };
             socket.join(gameId);
-            socket.emit("playerRole", { role: "w", gameId });
-            io.to(gameId).emit("playerJoined", { playerId: socket.id, role: "w" });
-        } else {
-            games[gameId].blackPlayer = socket.id;
-            socket.join(gameId);
-            socket.emit("playerRole", { role: "b", gameId });
-            io.to(gameId).emit("gameStart");
-            io.to(gameId).emit("playerJoined", { playerId: socket.id, role: "b" });
+            socket.emit("playerRole", { role: playerRole, gameId });
+            io.to(gameId).emit("playerJoined", { playerId: socket.id, role: playerRole });
         }
     });
 
