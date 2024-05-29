@@ -7,7 +7,18 @@ const { Chess } = require("chess.js");
 const path = require("path");
 
 const app = express();
+const server = http.createServer(app);
+const io = socket(server);
+const chess = new Chess();
+const PORT = process.env.PORT || 3000;
 
+// Set the views directory
+app.set("views", path.join(__dirname, "views"));
+
+// Set the view engine
+app.set("view engine", "ejs");
+
+// Ignore favicon requests
 app.get("/favicon.ico", (req, res) => {
     res.status(204).end();
 });
@@ -16,17 +27,13 @@ app.get("/favicon.png", (req, res) => {
     res.status(204).end();
 });
 
-const server = http.createServer(app);
-const io = socket(server);
-const chess = new Chess();
-const PORT = process.env.PORT || 3000;
-
-app.set("view engine", "ejs");
+// Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, "public")));
 
 let players = [];
 
 app.get("/", (req, res) => {
+    // Render the "index" view
     res.render("index", { title: "Chess Game" });
 });
 
