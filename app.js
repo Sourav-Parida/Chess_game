@@ -13,6 +13,7 @@ const io = socket(server);
 
 const chess = new Chess();
 
+
 let players = {};
 
 app.set("view engine", "ejs");
