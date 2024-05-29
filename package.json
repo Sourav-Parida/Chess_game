@@ -9,7 +9,9 @@
     },
     "dependencies": {
         "chess": "^1.2.1",
+        "chess.js": "^1.0.0-beta.8",
         "dotenv": "^10.0.0",
+        "ejs": "^3.1.10",
         "express": "^4.17.1",
         "socket.io": "^4.0.1"
     },
