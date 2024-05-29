@@ -39,9 +39,6 @@ io.on("connection", (socket) => {
             } else if (!availableGame.blackPlayer) {
                 playerRole = "b";
                 availableGame.blackPlayer = socket.id;
-            } else {
-                playerRole = "spectator";
-                availableGame.spectators.push(socket.id);
             }
             socket.join(gameId);
         } else {
@@ -93,19 +90,13 @@ io.on("connection", (socket) => {
         for (const gameId in games) {
             const game = games[gameId];
 
-            if (game.whitePlayer === socket.id) {
-                game.whitePlayer = null;
-                io.to(gameId).emit("playerDisconnected", "w");
-            } else if (game.blackPlayer === socket.id) {
-                game.blackPlayer = null;
-                io.to(gameId).emit("playerDisconnected", "b");
+            if (game.whitePlayer === socket.id || game.blackPlayer === socket.id) {
+                // Delete the whole game if either player disconnects
+                io.to(gameId).emit("gameOver", "A player disconnected. Game over.");
+                delete games[gameId];
             } else {
                 const index = game.spectators.indexOf(socket.id);
                 if (index !== -1) game.spectators.splice(index, 1);
-            }
-
-            if (!game.whitePlayer && !game.blackPlayer) {
-                delete games[gameId];
             }
         }
     });
