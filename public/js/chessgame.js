@@ -162,20 +162,23 @@ socket.on("move", function (move) {
     renderBoard();
 });
 
-socket.on("playerJoined", function ({ playerId, role }) {
-    const playerInfo = document.createElement('div');
-    playerInfo.innerText = `${role === "w" ? "White" : "Black"} Player: ${playerId}`;
-    document.getElementById("playerInfo").appendChild(playerInfo);
+socket.on("showStartGamePopup", function () {
+    const startGamePopup = document.createElement("div");
+    startGamePopup.classList.add("popup");
+    startGamePopup.innerText = "Both players have joined. Start the game!";
+    const startButton = document.createElement("button");
+    startButton.innerText = "Start Game";
+    startButton.onclick = function () {
+        document.body.removeChild(startGamePopup);
+        socket.emit("startGame", { gameId });
+    };
+    startGamePopup.appendChild(startButton);
+    document.body.appendChild(startGamePopup);
 });
 
-socket.on("gameStart", function () {
-    renderBoard();
-});
-
-socket.on("invalidMove", function (message) {
-    console.error("Invalid Move:", message);
-    // Display error message to the player
+socket.on("gameOver", function (message) {
     alert(message);
+    window.location.reload();
 });
 
 socket.emit("joinGame");

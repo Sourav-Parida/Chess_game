@@ -58,9 +58,9 @@ io.on("connection", (socket) => {
         socket.emit("playerRole", { role: playerRole, gameId });
         io.to(gameId).emit("playerJoined", { playerId: socket.id, role: playerRole });
 
-        // If both players have joined, start the game
+        // If both players have joined, notify both players to start the game
         if (games[gameId].whitePlayer && games[gameId].blackPlayer) {
-            io.to(gameId).emit("gameStart");
+            io.to(gameId).emit("showStartGamePopup");
         }
     });
 
