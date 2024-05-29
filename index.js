@@ -69,6 +69,16 @@ io.on("connection", (socket) => {
         }
     });
 
+    socket.on("playerJoined", function ({ playerId, role }) {
+        const playerInfo = document.createElement('div');
+        playerInfo.innerText = `${role === "w" ? "White" : "Black"} Player: ${playerId}`;
+        if (role === "w") {
+            document.getElementById("whitePlayer").appendChild(playerInfo);
+        } else {
+            document.getElementById("blackPlayer").appendChild(playerInfo);
+        }
+    });
+
     socket.on("move", ({ gameId, move }) => {
         const game = games[gameId];
         if (!game) return;
