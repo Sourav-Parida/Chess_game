@@ -2,6 +2,11 @@ const socket = io();
 const chess = new Chess();
 
 const boardElement = document.querySelector(".chessboard");
+const labelBar = document.getElementById("labelBar");
+const rowLabels = document.getElementById("rowLabels");
+
+const captureSound = new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/capture.mp3");
+const moveSound = new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-self.mp3"); 
 
 let draggedPiece = null;
 let sourceSquare = null;
@@ -10,6 +15,29 @@ let playerRole = null;
 const renderBoard = () => {
     const board = chess.board();
     boardElement.innerHTML = "";
+    labelBar.innerHTML = "";
+    rowLabels.innerHTML = "";
+    const letters = 'ABCDEFGH';
+    const numbers = '87654321';
+    
+    // Create the label bar and row labels
+    const colLabels = playerRole === "b" ? letters.split("").reverse() : letters.split("");
+    const rowLabelsArr = playerRole === "b" ? numbers.split("").reverse() : numbers.split("");
+    
+    // Create the label bar
+    for (let i = 0; i < 8; i++) {
+        const labelElement = document.createElement('div');
+        labelElement.innerText = colLabels[i];
+        labelBar.appendChild(labelElement);
+    }
+
+    // Create the row labels
+    for (let i = 0; i < 8; i++) {
+        const labelElement = document.createElement('div');
+        labelElement.innerText = rowLabelsArr[i];
+        rowLabels.appendChild(labelElement);
+    }
+
     board.forEach((row, rowIndex) => {
         row.forEach((square, squareIndex) => {
             const squareElement = document.createElement("div");
@@ -77,10 +105,25 @@ const handleMove = (source, target) => {
     if (result) {
         socket.emit("move", move);
         renderBoard();
+        if (result.flags.includes("c")) {
+            playCaptureSound(); // Play capture sound when capturing a piece
+        } else {
+            playMoveSound(); // Play move sound for simple moves
+        }
     } else {
         console.error("Invalid move", move);
     }
 };
+
+function playCaptureSound() {
+    captureSound.currentTime = 0;
+    captureSound.play();
+}
+
+function playMoveSound() {
+    moveSound.currentTime = 0;
+    moveSound.play();
+}
 
 const getPieceUnicode = (piece) => {
     const unicodePieces = {
