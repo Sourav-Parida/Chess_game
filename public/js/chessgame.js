@@ -11,6 +11,7 @@ const moveSound = new Audio("https://images.chesscomfiles.com/chess-themes/sound
 let draggedPiece = null;
 let sourceSquare = null;
 let playerRole = null;
+let gameId = null;
 
 const renderBoard = () => {
     const board = chess.board();
@@ -20,18 +21,15 @@ const renderBoard = () => {
     const letters = 'ABCDEFGH';
     const numbers = '87654321';
     
-    // Create the label bar and row labels
     const colLabels = playerRole === "b" ? letters.split("").reverse() : letters.split("");
     const rowLabelsArr = playerRole === "b" ? numbers.split("").reverse() : numbers.split("");
     
-    // Create the label bar
     for (let i = 0; i < 8; i++) {
         const labelElement = document.createElement('div');
         labelElement.innerText = colLabels[i];
         labelBar.appendChild(labelElement);
     }
 
-    // Create the row labels
     for (let i = 0; i < 8; i++) {
         const labelElement = document.createElement('div');
         labelElement.innerText = rowLabelsArr[i];
@@ -103,12 +101,12 @@ const handleMove = (source, target) => {
 
     const result = chess.move(move);
     if (result) {
-        socket.emit("move", move);
+        socket.emit("move", { gameId, move });
         renderBoard();
         if (result.flags.includes("c")) {
-            playCaptureSound(); // Play capture sound when capturing a piece
+            playCaptureSound();
         } else {
-            playMoveSound(); // Play move sound for simple moves
+            playMoveSound();
         }
     } else {
         console.error("Invalid move", move);
@@ -143,8 +141,9 @@ const getPieceUnicode = (piece) => {
     return unicodePieces[piece.type] || "";
 };
 
-socket.on("playerRole", function (role) {
+socket.on("playerRole", function ({ role, gameId: id }) {
     playerRole = role;
+    gameId = id;
     renderBoard();
 });
 
@@ -163,4 +162,23 @@ socket.on("move", function (move) {
     renderBoard();
 });
 
+socket.on("playerJoined", function ({ playerId, role }) {
+    const playerInfo = document.createElement('div');
+    playerInfo.innerText = `${role === "w" ? "White" : "Black"} Player: ${playerId}`;
+    document.getElementById("playerInfo").appendChild(playerInfo);
+});
+
+socket.on("gameStart", function () {
+    renderBoard();
+});
+
+socket.on("invalidMove", function (message) {
+    console.error("Invalid Move:", message);
+    // Display error message to the player
+    alert(message);
+});
+
+socket.emit("joinGame");
+
 renderBoard();
+
