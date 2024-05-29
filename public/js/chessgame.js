@@ -6,7 +6,7 @@ const labelBar = document.getElementById("labelBar");
 const rowLabels = document.getElementById("rowLabels");
 
 const captureSound = new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/capture.mp3");
-const moveSound = new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-self.mp3"); 
+const moveSound = new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-self.mp3");
 
 let draggedPiece = null;
 let sourceSquare = null;
@@ -20,10 +20,10 @@ const renderBoard = () => {
     rowLabels.innerHTML = "";
     const letters = 'ABCDEFGH';
     const numbers = '87654321';
-    
+
     const colLabels = playerRole === "b" ? letters.split("").reverse() : letters.split("");
     const rowLabelsArr = playerRole === "b" ? numbers.split("").reverse() : numbers.split("");
-    
+
     for (let i = 0; i < 8; i++) {
         const labelElement = document.createElement('div');
         labelElement.innerText = colLabels[i];
@@ -181,4 +181,3 @@ socket.on("invalidMove", function (message) {
 socket.emit("joinGame");
 
 renderBoard();
-

@@ -1,5 +1,3 @@
-require("dotenv").config();
-
 const express = require("express");
 const socket = require("socket.io");
 const http = require("http");
@@ -19,10 +17,6 @@ app.get("/favicon.ico", (req, res) => {
     res.status(204).end();
 });
 
-app.get("/favicon.png", (req, res) => {
-    res.status(204).end();
-});
-
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", (req, res) => {
@@ -38,44 +32,39 @@ io.on("connection", (socket) => {
         let gameId;
         let playerRole;
         
-        // Find a game with an available white player slot
-        const availableGame = Object.values(games).find(game => !game.whitePlayer);
+        // Find a game with an available player slot
+        let availableGame = Object.values(games).find(game => !game.blackPlayer || !game.whitePlayer);
 
         if (availableGame) {
             gameId = availableGame.id;
-            playerRole = "w";
-            availableGame.whitePlayer = socket.id;
+            if (!availableGame.whitePlayer) {
+                playerRole = "w";
+                availableGame.whitePlayer = socket.id;
+            } else {
+                playerRole = "b";
+                availableGame.blackPlayer = socket.id;
+            }
             socket.join(gameId);
         } else {
             // If no available game, create a new one
             gameId = uuidv4();
-            playerRole = "b";
+            playerRole = "w"; // Default to white player for new game
             games[gameId] = {
                 id: gameId,
                 chess: new Chess(),
-                whitePlayer: null,
+                whitePlayer: socket.id,
                 blackPlayer: null,
                 spectators: [],
             };
-            games[gameId][playerRole + "Player"] = socket.id;
             socket.join(gameId);
         }
         
         socket.emit("playerRole", { role: playerRole, gameId });
         io.to(gameId).emit("playerJoined", { playerId: socket.id, role: playerRole });
         
-        if (playerRole === "b") {
+        // If both players have joined, start the game
+        if (games[gameId].whitePlayer && games[gameId].blackPlayer) {
             io.to(gameId).emit("gameStart");
-        }
-    });
-
-    socket.on("playerJoined", function ({ playerId, role }) {
-        const playerInfo = document.createElement('div');
-        playerInfo.innerText = `${role === "w" ? "White" : "Black"} Player: ${playerId}`;
-        if (role === "w") {
-            document.getElementById("whitePlayer").appendChild(playerInfo);
-        } else {
-            document.getElementById("blackPlayer").appendChild(playerInfo);
         }
     });
 
