@@ -1,6 +1,5 @@
 require("dotenv").config();
 
-const PORT = process.env.PORT || 3000;
 const express = require("express");
 const socket = require("socket.io");
 const http = require("http");
@@ -10,48 +9,45 @@ const path = require("path");
 const app = express();
 const server = http.createServer(app);
 const io = socket(server);
-
 const chess = new Chess();
-
-
-let players = {};
+const PORT = process.env.PORT || 3000;
 
 app.set("view engine", "ejs");
 app.use(express.static(path.join(__dirname, "public")));
+
+let players = [];
 
 app.get("/", (req, res) => {
     res.render("index", { title: "Chess Game" });
 });
 
-io.on("connection", function (uniquesocket) {
-    console.log("Connected", uniquesocket.id);
+io.on("connection", (socket) => {
+    console.log("Connected", socket.id);
 
-    if (!players.white) {
-        players.white = uniquesocket.id;
-        uniquesocket.emit("playerRole", "w");
-    } else if (!players.black) {
-        players.black = uniquesocket.id;
-        uniquesocket.emit("playerRole", "b");
+    if (players.length < 2) {
+        players.push(socket.id);
+        const role = players.length === 1 ? "w" : "b";
+        socket.emit("playerRole", role);
     } else {
-        uniquesocket.emit("spectatorRole");
-        uniquesocket.emit("boardState", chess.fen());
+        socket.emit("spectatorRole");
+        socket.emit("boardState", chess.fen());
     }
 
-    uniquesocket.on("disconnect", function () {
-        console.log("Disconnected", uniquesocket.id);
-        if (uniquesocket.id === players.white) {
-            delete players.white;
-            io.emit("playerDisconnected", "w");
-        } else if (uniquesocket.id === players.black) {
-            delete players.black;
-            io.emit("playerDisconnected", "b");
+    socket.on("disconnect", () => {
+        console.log("Disconnected", socket.id);
+        const index = players.indexOf(socket.id);
+        if (index !== -1) {
+            players.splice(index, 1);
+            io.emit("playerDisconnected", index === 0 ? "w" : "b");
         }
     });
 
-    uniquesocket.on("move", (move) => {
+    socket.on("move", (move) => {
         try {
-            if (chess.turn() === 'w' && uniquesocket.id !== players.white) return;
-            if (chess.turn() === 'b' && uniquesocket.id !== players.black) return;
+            const playerIndex = players.indexOf(socket.id);
+            if (playerIndex === -1 || (chess.turn() === "w" && playerIndex !== 0) || (chess.turn() === "b" && playerIndex !== 1)) {
+                return;
+            }
 
             const result = chess.move(move);
             if (result) {
@@ -59,15 +55,15 @@ io.on("connection", function (uniquesocket) {
                 io.emit("boardState", chess.fen());
             } else {
                 console.log("Invalid Move:", move);
-                uniquesocket.emit("invalidMove", move);
+                socket.emit("invalidMove", move);
             }
         } catch (err) {
-            console.log(err);
-            uniquesocket.emit("invalidMove", move);
+            console.error(err);
+            socket.emit("invalidMove", move);
         }
     });
 });
 
-server.listen(PORT, function () {
+server.listen(PORT, () => {
     console.log("Listening on port", PORT);
 });
