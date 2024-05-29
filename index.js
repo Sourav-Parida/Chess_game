@@ -31,9 +31,9 @@ io.on("connection", (socket) => {
     socket.on("joinGame", () => {
         let gameId;
         let playerRole;
-        
-        // Find a game with an available player slot
-        let availableGame = Object.values(games).find(game => !game.blackPlayer || !game.whitePlayer);
+
+        // Find a game that has less than 2 players
+        const availableGame = Object.values(games).find(game => !game.blackPlayer || !game.whitePlayer);
 
         if (availableGame) {
             gameId = availableGame.id;
@@ -48,7 +48,7 @@ io.on("connection", (socket) => {
         } else {
             // If no available game, create a new one
             gameId = uuidv4();
-            playerRole = "w"; // Default to white player for new game
+            playerRole = "w"; // First player is always white
             games[gameId] = {
                 id: gameId,
                 chess: new Chess(),
@@ -58,10 +58,10 @@ io.on("connection", (socket) => {
             };
             socket.join(gameId);
         }
-        
+
         socket.emit("playerRole", { role: playerRole, gameId });
         io.to(gameId).emit("playerJoined", { playerId: socket.id, role: playerRole });
-        
+
         // If both players have joined, start the game
         if (games[gameId].whitePlayer && games[gameId].blackPlayer) {
             io.to(gameId).emit("gameStart");
