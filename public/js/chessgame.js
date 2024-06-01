@@ -4,6 +4,7 @@ const chess = new Chess();
 const boardElement = document.querySelector(".chessboard");
 const labelBar = document.getElementById("labelBar");
 const rowLabels = document.getElementById("rowLabels");
+const playerListElement = document.getElementById("playerList");
 
 const captureSound = new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/capture.mp3");
 const moveSound = new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-self.mp3");
@@ -12,6 +13,7 @@ let draggedPiece = null;
 let sourceSquare = null;
 let playerRole = null;
 let gameId = null;
+let playerId = null;
 
 const renderBoard = () => {
     const board = chess.board();
@@ -141,16 +143,39 @@ const getPieceUnicode = (piece) => {
     return unicodePieces[piece.type] || "";
 };
 
-socket.on("playerRole", function ({ role, gameId: id }) {
-    playerRole = role;
+socket.on("setId", function (id) {
+    playerId = id;
+});
+
+socket.on("updatePlayerList", function (players) {
+    playerListElement.innerHTML = "";
+    players.forEach(player => {
+        if (player.id !== playerId) {
+            const playerDiv = document.createElement("div");
+            playerDiv.classList.add("user");
+            playerDiv.innerText = player.name;
+            playerDiv.onclick = function () {
+                socket.emit("challengePlayer", player.id);
+            };
+            playerListElement.appendChild(playerDiv);
+        }
+    });
+});
+
+socket.on("challengeReceived", function ({ challengerId, challengerName }) {
+    const acceptChallenge = confirm(`${challengerName} has challenged you to a game. Do you accept?`);
+    if (acceptChallenge) {
+        socket.emit("acceptChallenge", { challengerId });
+    }
+});
+
+socket.on("gameStart", function ({ gameId: id, role }) {
     gameId = id;
+    playerRole = role;
+    // No need to call socket.join(gameId) on client-side, it's a server-side operation.
     renderBoard();
 });
 
-socket.on("spectatorRole", function () {
-    playerRole = null;
-    renderBoard();
-});
 
 socket.on("boardState", function (fen) {
     chess.load(fen);
@@ -162,26 +187,11 @@ socket.on("move", function (move) {
     renderBoard();
 });
 
-
-socket.on("showStartGamePopup", function () {
-    const startGamePopup = document.createElement("div");
-    startGamePopup.classList.add("popup");
-    startGamePopup.innerText = "Both players have joined. Start the game!";
-    const startButton = document.createElement("button");
-    startButton.innerText = "Start Game";
-    startButton.onclick = function () {
-        document.body.removeChild(startGamePopup);
-        socket.emit("startGame", { gameId });
-    };
-    startGamePopup.appendChild(startButton);
-    document.body.appendChild(startGamePopup);
-});
-
 socket.on("gameOver", function (message) {
     alert(message);
     window.location.reload();
 });
 
-socket.emit("joinGame");
-
-renderBoard();
+// Prompt for the user's name and send it to the server
+const playerName = prompt("Enter your name:");
+socket.emit("setName", { name: playerName });

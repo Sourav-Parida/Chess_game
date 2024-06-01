@@ -20,49 +20,45 @@ app.get("/", (req, res) => {
 });
 
 const games = {};
+const players = {};
 
 io.on("connection", (socket) => {
     console.log("Connected", socket.id);
 
-    socket.on("joinGame", () => {
-        let gameId;
-        let playerRole;
+    // Send the player's ID to the client
+    socket.emit("setId", socket.id);
 
-        // Find a game that has less than 2 players
-        const availableGame = Object.values(games).find(game => !game.blackPlayer || !game.whitePlayer);
-
-        if (availableGame) {
-            gameId = availableGame.id;
-            if (!availableGame.whitePlayer) {
-                playerRole = "w";
-                availableGame.whitePlayer = socket.id;
-            } else if (!availableGame.blackPlayer) {
-                playerRole = "b";
-                availableGame.blackPlayer = socket.id;
-            }
-            socket.join(gameId);
-        } else {
-            // If no available game, create a new one
-            gameId = uuidv4();
-            playerRole = "w"; // First player is always white
-            games[gameId] = {
-                id: gameId,
-                chess: new Chess(),
-                whitePlayer: socket.id,
-                blackPlayer: null,
-                spectators: [],
-            };
-            socket.join(gameId);
-        }
-
-        socket.emit("playerRole", { role: playerRole, gameId });
-        io.to(gameId).emit("playerJoined", { playerId: socket.id, role: playerRole });
-
-        // If both players have joined, notify both players to start the game
-        if (games[gameId].whitePlayer && games[gameId].blackPlayer) {
-            io.to(gameId).emit("showStartGamePopup");
-        }
+    socket.on("setName", ({ name }) => {
+        players[socket.id] = { id: socket.id, name: name };
+        io.emit("updatePlayerList", Object.values(players));
     });
+
+    socket.on("challengePlayer", (opponentId) => {
+        const challenger = players[socket.id];
+        io.to(opponentId).emit("challengeReceived", { challengerId: socket.id, challengerName: challenger.name });
+    });
+
+    socket.on("acceptChallenge", ({ challengerId }) => {
+        const gameId = uuidv4();
+        const challenger = players[challengerId];
+        const opponent = players[socket.id];
+    
+        games[gameId] = {
+            id: gameId,
+            chess: new Chess(),
+            whitePlayer: challengerId,
+            blackPlayer: socket.id,
+            spectators: [],
+        };
+    
+        // Join both players to a room with the gameId
+        socket.join(gameId);
+        io.to(challengerId).socketsJoin(gameId); // Make sure the challenger joins the game room
+    
+        io.to(challengerId).emit("gameStart", { gameId, role: "w" });
+        io.to(socket.id).emit("gameStart", { gameId, role: "b" });
+    });
+    
 
     socket.on("move", ({ gameId, move }) => {
         const game = games[gameId];
@@ -86,12 +82,13 @@ io.on("connection", (socket) => {
 
     socket.on("disconnect", () => {
         console.log("Disconnected", socket.id);
+        delete players[socket.id];
+        io.emit("updatePlayerList", Object.values(players));
 
         for (const gameId in games) {
             const game = games[gameId];
 
             if (game.whitePlayer === socket.id || game.blackPlayer === socket.id) {
-                // Delete the whole game if either player disconnects
                 io.to(gameId).emit("gameOver", "A player disconnected. Game over.");
                 delete games[gameId];
             } else {

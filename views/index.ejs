@@ -17,10 +17,10 @@
             margin-right: 10px;
             color: white;
             height: 380px;
-            align-items: center; /* Align labels vertically */
+            align-items: center;
         }
         .row-labels div {
-            height: 12.5%; /* Adjust label height to fit squares */
+            height: 12.5%;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -73,17 +73,30 @@
             justify-content: space-between;
             width: 380px;
             color: white;
-            align-items: flex-start; /* Align labels with top of squares */
+            align-items: flex-start;
         }
         .label-bar div {
             margin-left: 10%;
-            width:50px;
+            width: 50px;
             text-align: center;
+        }
+        #playerList {
+            color: white;
+            margin-right: 20px;
+            width: 200px;
+        }
+        .user {
+            padding: 5px;
+            cursor: pointer;
+        }
+        .user:hover {
+            background-color: #333;
         }
     </style>
 </head>
 <body>
     <div class="w-full h-screen flex items-center justify-center bg-zinc-900">
+        <div id="playerList" class="flex flex-col"></div>
         <div id="playerInfo">
             <div id="whitePlayer"></div>
             <div id="blackPlayer"></div>
@@ -95,8 +108,6 @@
             </div>
             <div id="labelBar" class="label-bar"></div>
         </div>
-        
-        
     </div>
 
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO" crossorigin="anonymous"></script>
