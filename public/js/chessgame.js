@@ -1,4 +1,8 @@
-const socket = io(window.location.origin); // Ensure this URL matches your deployed app's URL
+const socket = io('https://chess-game-lemon.vercel.app/', {
+    transports: ['websocket', 'polling']
+});
+
+ // Ensure this URL matches your deployed app's URL
 
 const chess = new Chess();
 

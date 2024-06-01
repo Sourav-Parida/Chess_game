@@ -7,13 +7,14 @@ const { v4: uuidv4 } = require("uuid");
 
 const app = express();
 const server = http.createServer(app);
-const io = socket(server, {
+const io = socketIo(server, {
     cors: {
-        origin: "*", // Adjust this in production to specific domain
-        methods: ["GET", "POST"],
-        credentials: true
+        origin: "https://chess-game-lemon.vercel.app/",
+        methods: ["GET", "POST"]
     }
 });
+
+
 const PORT = process.env.PORT || 3000;
 
 app.set("views", path.join(__dirname, "views"));
