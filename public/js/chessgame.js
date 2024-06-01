@@ -15,6 +15,7 @@ let playerRole = null;
 let gameId = null;
 let playerId = null;
 let playerName = null;
+let opponentName = null;
 
 document.getElementById("nameForm").addEventListener("submit", function (e) {
     e.preventDefault();
@@ -162,38 +163,96 @@ socket.on("updatePlayerList", function (players) {
     players.forEach(player => {
         const playerDiv = document.createElement("div");
         playerDiv.classList.add("user");
-        playerDiv.innerText = player.name;
+        playerDiv.innerText = player.id === playerId ? `${player.name} (You)` : player.name;
         if (player.id !== playerId) {
             playerDiv.onclick = function () {
-                socket.emit("challengePlayer", player.id);
+                showPlayerOptions(player.id, player.name);
             };
         }
         playerListElement.appendChild(playerDiv);
     });
 });
 
+function showPlayerOptions(playerId, playerName) {
+    const playerOptions = document.createElement("div");
+    playerOptions.classList.add("player-options");
+
+    const challengeButton = document.createElement("button");
+    challengeButton.classList.add("p-2", "bg-blue-500", "text-white", "rounded", "m-2");
+    challengeButton.innerText = "Challenge";
+    challengeButton.onclick = function () {
+        socket.emit("challengePlayer", playerId);
+        document.body.removeChild(playerOptions);
+    };
+
+    const spectateButton = document.createElement("button");
+    spectateButton.classList.add("p-2", "bg-green-500", "text-white", "rounded", "m-2");
+    spectateButton.innerText = "Spectate";
+    spectateButton.onclick = function () {
+        alert("Spectate feature coming soon!");
+        document.body.removeChild(playerOptions);
+    };
+
+    playerOptions.appendChild(challengeButton);
+    playerOptions.appendChild(spectateButton);
+
+    playerOptions.style.position = "absolute";
+    playerOptions.style.top = "50%";
+    playerOptions.style.left = "50%";
+    playerOptions.style.transform = "translate(-50%, -50%)";
+    playerOptions.style.backgroundColor = "#333";
+    playerOptions.style.padding = "20px";
+    playerOptions.style.borderRadius = "10px";
+    document.body.appendChild(playerOptions);
+}
+
 socket.on("challengeReceived", function ({ challengerId, challengerName }) {
-    const acceptModal = document.getElementById("acceptModal");
-    const challengerText = document.getElementById("challengerText");
+    const challengeModal = document.createElement("div");
+    challengeModal.classList.add("modal", "flex");
+
+    const modalContent = document.createElement("div");
+    modalContent.classList.add("modal-content");
+
+    const challengerText = document.createElement("p");
+    challengerText.classList.add("text-white", "mb-4");
     challengerText.innerText = `${challengerName} has challenged you to a game. Do you accept?`;
 
-    acceptModal.classList.remove("hidden");
-
-    document.getElementById("acceptButton").onclick = function () {
+    const acceptButton = document.createElement("button");
+    acceptButton.classList.add("p-2", "bg-green-500", "text-white", "rounded", "mr-2");
+    acceptButton.innerText = "Accept";
+    acceptButton.onclick = function () {
         socket.emit("acceptChallenge", { challengerId });
-        acceptModal.classList.add("hidden");
+        document.body.removeChild(challengeModal);
     };
 
-    document.getElementById("declineButton").onclick = function () {
-        acceptModal.classList.add("hidden");
+    const declineButton = document.createElement("button");
+    declineButton.classList.add("p-2", "bg-red-500", "text-white", "rounded");
+    declineButton.innerText = "Decline";
+    declineButton.onclick = function () {
+        document.body.removeChild(challengeModal);
     };
+
+    modalContent.appendChild(challengerText);
+    modalContent.appendChild(acceptButton);
+    modalContent.appendChild(declineButton);
+    challengeModal.appendChild(modalContent);
+    document.body.appendChild(challengeModal);
 });
 
-socket.on("gameStart", function ({ gameId: id, role }) {
+socket.on("gameStart", function ({ gameId: id, role, opponentName: oppName }) {
     gameId = id;
     playerRole = role;
+    opponentName = oppName;
     renderBoard();
+    updatePlayerNames();
 });
+
+function updatePlayerNames() {
+    const whitePlayer = playerRole === "w" ? playerName : opponentName;
+    const blackPlayer = playerRole === "b" ? playerName : opponentName;
+    document.getElementById("whitePlayerName").innerText = whitePlayer;
+    document.getElementById("blackPlayerName").innerText = blackPlayer;
+}
 
 socket.on("boardState", function (fen) {
     chess.load(fen);

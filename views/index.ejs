@@ -84,6 +84,7 @@
         #playerList {
             color: white;
             margin: 10px;
+            width: 200px;
         }
         .user {
             padding: 5px;
@@ -122,6 +123,10 @@
             <div id="chessboard" class="chessboard"></div>
         </div>
         <div id="labelBar" class="label-bar"></div>
+        <div class="flex justify-between w-full mt-4">
+            <div id="whitePlayerName" class="text-white"></div>
+            <div id="blackPlayerName" class="text-white"></div>
+        </div>
     </div>
 
     <div id="nameModal" class="modal flex">
@@ -131,14 +136,6 @@
                 <input id="nameInput" type="text" class="p-2 m-2" required>
                 <button type="submit" class="p-2 bg-blue-500 text-white rounded">Submit</button>
             </form>
-        </div>
-    </div>
-
-    <div id="acceptModal" class="modal flex hidden">
-        <div class="modal-content">
-            <p id="challengerText" class="text-white mb-4"></p>
-            <button id="acceptButton" class="p-2 bg-green-500 text-white rounded mr-2">Accept</button>
-            <button id="declineButton" class="p-2 bg-red-500 text-white rounded">Decline</button>
         </div>
     </div>
 

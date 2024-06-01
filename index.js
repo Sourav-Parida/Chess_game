@@ -29,6 +29,7 @@ io.on("connection", (socket) => {
 
     socket.on("setName", ({ name }) => {
         players[socket.id] = { id: socket.id, name: name };
+        socket.emit("setId", { id: socket.id, name });
         io.emit("updatePlayerList", Object.values(players));
     });
 
@@ -53,8 +54,8 @@ io.on("connection", (socket) => {
         socket.join(gameId);
         io.to(challengerId).socketsJoin(gameId);
 
-        io.to(challengerId).emit("gameStart", { gameId, role: "w" });
-        io.to(socket.id).emit("gameStart", { gameId, role: "b" });
+        io.to(challengerId).emit("gameStart", { gameId, role: "w", opponentName: opponent.name });
+        io.to(socket.id).emit("gameStart", { gameId, role: "b", opponentName: challenger.name });
     });
 
     socket.on("move", ({ gameId, move }) => {
