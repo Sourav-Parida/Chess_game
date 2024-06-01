@@ -1,7 +1,5 @@
 const socket = io('https://chess-game-lemon.vercel.app'); // Ensure this URL matches your deployed app's URL
 
-// const socket = io('https://your-ngrok-url.ngrok.io');
-
 const chess = new Chess();
 
 const boardElement = document.querySelector(".chessboard");
