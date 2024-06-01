@@ -1,4 +1,4 @@
-const socket = io('https://chess-game-lemon.vercel.app'); // Ensure this URL matches your deployed app's URL
+const socket = io(); // Ensure this URL matches your deployed app's URL
 
 const chess = new Chess();
 
