@@ -26,11 +26,12 @@ io.on("connection", (socket) => {
     console.log("Connected", socket.id);
 
     // Send the player's ID to the client
-    socket.emit("setId", socket.id);
+    socket.emit("setId", { id: socket.id, name: players[socket.id]?.name });
 
     socket.on("setName", ({ name }) => {
         players[socket.id] = { id: socket.id, name: name };
         io.emit("updatePlayerList", Object.values(players));
+        socket.emit("setId", { id: socket.id, name: name }); // Emit the player's ID and name to the client
     });
 
     socket.on("challengePlayer", (opponentId) => {

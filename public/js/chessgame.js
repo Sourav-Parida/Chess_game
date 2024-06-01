@@ -5,6 +5,9 @@ const boardElement = document.querySelector(".chessboard");
 const labelBar = document.getElementById("labelBar");
 const rowLabels = document.getElementById("rowLabels");
 const playerListElement = document.getElementById("playerList");
+const currentPlayerElement = document.getElementById("currentPlayer");
+const whitePlayerElement = document.getElementById("whitePlayer");
+const blackPlayerElement = document.getElementById("blackPlayer");
 
 const captureSound = new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/capture.mp3");
 const moveSound = new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-self.mp3");
@@ -14,6 +17,7 @@ let sourceSquare = null;
 let playerRole = null;
 let gameId = null;
 let playerId = null;
+let playerName = null;
 
 const renderBoard = () => {
     const board = chess.board();
@@ -143,8 +147,10 @@ const getPieceUnicode = (piece) => {
     return unicodePieces[piece.type] || "";
 };
 
-socket.on("setId", function (id) {
+socket.on("setId", function ({ id, name }) {
     playerId = id;
+    playerName = name;
+    currentPlayerElement.innerText = `Current Player: ${name}`;
 });
 
 socket.on("updatePlayerList", function (players) {
@@ -154,9 +160,11 @@ socket.on("updatePlayerList", function (players) {
             const playerDiv = document.createElement("div");
             playerDiv.classList.add("user");
             playerDiv.innerText = player.name;
-            playerDiv.onclick = function () {
-                socket.emit("challengePlayer", player.id);
-            };
+            if (player.name !== playerName) {
+                playerDiv.onclick = function () {
+                    socket.emit("challengePlayer", player.id);
+                };
+            }
             playerListElement.appendChild(playerDiv);
         }
     });
@@ -176,7 +184,6 @@ socket.on("gameStart", function ({ gameId: id, role }) {
     renderBoard();
 });
 
-
 socket.on("boardState", function (fen) {
     chess.load(fen);
     renderBoard();
@@ -193,5 +200,5 @@ socket.on("gameOver", function (message) {
 });
 
 // Prompt for the user's name and send it to the server
-const playerName = prompt("Enter your name:");
+playerName = prompt("Enter your name:");
 socket.emit("setName", { name: playerName });

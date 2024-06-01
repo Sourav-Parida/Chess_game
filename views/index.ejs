@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chessboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <style>
         .chessboard-container {
             display: flex;
@@ -97,9 +96,10 @@
 <body>
     <div class="w-full h-screen flex items-center justify-center bg-zinc-900">
         <div id="playerList" class="flex flex-col"></div>
-        <div id="playerInfo">
-            <div id="whitePlayer"></div>
-            <div id="blackPlayer"></div>
+        <div id="playerInfo" class="flex flex-col items-center">
+            <div id="currentPlayer" class="text-white mb-2"></div>
+            <div id="whitePlayer" class="text-white"></div>
+            <div id="blackPlayer" class="text-white"></div>
         </div>
         <div>
             <div class="chessboard-container">
