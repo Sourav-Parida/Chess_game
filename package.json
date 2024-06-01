@@ -1,18 +1,16 @@
 {
-    "name": "chess-game",
-    "version": "1.0.0",
-    "description": "Chess game using Socket.IO",
-    "main": "server.js",
-    "scripts": {
-      "start": "node server.js"
-    },
-    "dependencies": {
-      "chess.js": "^0.10.3",
-      "ejs": "^3.1.6",
-      "express": "^4.17.1",
-      "socket.io": "^4.0.1",
-      "uuid": "^8.3.2"
-    },
+  "name": "my-chess-app",
+  "version": "1.0.0",
+  "main": "api/index.js",
+  "scripts": {
+    "start": "node api/index.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^4.0.0",
+    "chess.js": "^1.0.0",
+    "uuid": "^8.0.0"
+  },
     "engines": {
       "node": ">=14.0.0"
     }

@@ -1,7 +1,6 @@
 const socket = io('/', {
     transports: ['websocket', 'polling']
 });
-
  // Ensure this URL matches your deployed app's URL
 
 const chess = new Chess();

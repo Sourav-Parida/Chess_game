@@ -1,29 +1,18 @@
+const { Server } = require("socket.io");
 const express = require("express");
-const socketIo = require("socket.io");
-const http = require("http");
 const { Chess } = require("chess.js");
 const path = require("path");
 const { v4: uuidv4 } = require("uuid");
 
 const app = express();
-const server = http.createServer(app);
+app.use(express.static(path.join(__dirname, "../public")));
 
-const io = socketIo(server, {
+const server = require("http").createServer(app);
+const io = new Server(server, {
     cors: {
-        origin: process.env.CORS_ORIGIN || "http://localhost:3000",
+        origin: "*",
         methods: ["GET", "POST"]
     }
-});
-
-const PORT = process.env.PORT || 3000;
-
-app.set("views", path.join(__dirname, "views"));
-app.set("view engine", "ejs");
-
-app.use(express.static(path.join(__dirname, "public")));
-
-app.get("/", (req, res) => {
-    res.render("index", { title: "Chess Game" });
 });
 
 const games = {};
@@ -111,6 +100,7 @@ io.on("connection", (socket) => {
     });
 });
 
-server.listen(PORT, () => {
-    console.log("Listening on port", PORT);
-});
+module.exports = (req, res) => {
+    res.status(200).json({ message: "Server is up and running" });
+    server.listen();
+};
