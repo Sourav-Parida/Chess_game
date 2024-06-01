@@ -9,7 +9,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socket(server, {
     cors: {
-        origin: "*", // Allow all origins, adjust this based on your security requirements
+        origin: "*", // Adjust this in production to specific domain
         methods: ["GET", "POST"],
         credentials: true
     }
@@ -34,16 +34,19 @@ io.on("connection", (socket) => {
     socket.emit("setId", socket.id);
 
     socket.on("setName", ({ name }) => {
+        if (!name) return;
         players[socket.id] = { id: socket.id, name: name };
         io.emit("updatePlayerList", Object.values(players));
     });
 
     socket.on("challengePlayer", (opponentId) => {
         const challenger = players[socket.id];
+        if (!challenger || !players[opponentId]) return;
         io.to(opponentId).emit("challengeReceived", { challengerId: socket.id, challengerName: challenger.name });
     });
 
     socket.on("acceptChallenge", ({ challengerId }) => {
+        if (!players[challengerId] || !players[socket.id]) return;
         const gameId = uuidv4();
         const challenger = players[challengerId];
         const opponent = players[socket.id];
@@ -78,6 +81,11 @@ io.on("connection", (socket) => {
         if (result) {
             io.to(gameId).emit("move", move);
             io.to(gameId).emit("boardState", chess.fen());
+            if (chess.isGameOver()) {
+                const winner = chess.turn() === 'w' ? blackPlayer : whitePlayer;
+                io.to(gameId).emit("gameOver", { winner: winner, reason: chess.isCheckmate() ? 'checkmate' : 'draw' });
+                delete games[gameId];
+            }
         } else {
             socket.emit("invalidMove", "Invalid move!");
         }
