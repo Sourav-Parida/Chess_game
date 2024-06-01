@@ -1,18 +1,22 @@
-const { Server } = require("socket.io");
 const express = require("express");
+const socket = require("socket.io");
+const http = require("http");
 const { Chess } = require("chess.js");
 const path = require("path");
 const { v4: uuidv4 } = require("uuid");
 
 const app = express();
-app.use(express.static(path.join(__dirname, "../public")));
+const server = http.createServer(app);
+const io = socket(server);
+const PORT = process.env.PORT || 3000;
 
-const server = require("http").createServer(app);
-const io = new Server(server, {
-    cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
-    }
+app.set("views", path.join(__dirname, "views"));
+app.set("view engine", "ejs");
+
+app.use(express.static(path.join(__dirname, "public")));
+
+app.get("/", (req, res) => {
+    res.render("index", { title: "Chess Game" });
 });
 
 const games = {};
@@ -21,26 +25,24 @@ const players = {};
 io.on("connection", (socket) => {
     console.log("Connected", socket.id);
 
+    // Send the player's ID to the client
     socket.emit("setId", socket.id);
 
     socket.on("setName", ({ name }) => {
-        if (!name) return;
         players[socket.id] = { id: socket.id, name: name };
         io.emit("updatePlayerList", Object.values(players));
     });
 
     socket.on("challengePlayer", (opponentId) => {
         const challenger = players[socket.id];
-        if (!challenger || !players[opponentId]) return;
         io.to(opponentId).emit("challengeReceived", { challengerId: socket.id, challengerName: challenger.name });
     });
 
     socket.on("acceptChallenge", ({ challengerId }) => {
-        if (!players[challengerId] || !players[socket.id]) return;
         const gameId = uuidv4();
         const challenger = players[challengerId];
         const opponent = players[socket.id];
-
+    
         games[gameId] = {
             id: gameId,
             chess: new Chess(),
@@ -48,13 +50,15 @@ io.on("connection", (socket) => {
             blackPlayer: socket.id,
             spectators: [],
         };
-
+    
+        // Join both players to a room with the gameId
         socket.join(gameId);
-        io.to(challengerId).socketsJoin(gameId);
-
+        io.to(challengerId).socketsJoin(gameId); // Make sure the challenger joins the game room
+    
         io.to(challengerId).emit("gameStart", { gameId, role: "w" });
         io.to(socket.id).emit("gameStart", { gameId, role: "b" });
     });
+    
 
     socket.on("move", ({ gameId, move }) => {
         const game = games[gameId];
@@ -71,11 +75,6 @@ io.on("connection", (socket) => {
         if (result) {
             io.to(gameId).emit("move", move);
             io.to(gameId).emit("boardState", chess.fen());
-            if (chess.isGameOver()) {
-                const winner = chess.turn() === 'w' ? blackPlayer : whitePlayer;
-                io.to(gameId).emit("gameOver", { winner: winner, reason: chess.isCheckmate() ? 'checkmate' : 'draw' });
-                delete games[gameId];
-            }
         } else {
             socket.emit("invalidMove", "Invalid move!");
         }
@@ -100,7 +99,6 @@ io.on("connection", (socket) => {
     });
 });
 
-module.exports = (req, res) => {
-    res.status(200).json({ message: "Server is up and running" });
-    server.listen();
-};
+server.listen(PORT, () => {
+    console.log("Listening on port", PORT);
+});

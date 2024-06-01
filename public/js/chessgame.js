@@ -1,8 +1,4 @@
-const socket = io('/', {
-    transports: ['websocket', 'polling']
-});
- // Ensure this URL matches your deployed app's URL
-
+const socket = io();
 const chess = new Chess();
 
 const boardElement = document.querySelector(".chessboard");
@@ -148,14 +144,13 @@ const getPieceUnicode = (piece) => {
 };
 
 socket.on("setId", function (id) {
-    playerId = id; // Set the player's ID
+    playerId = id;
 });
-
 
 socket.on("updatePlayerList", function (players) {
     playerListElement.innerHTML = "";
     players.forEach(player => {
-        if (player.id !== playerId) { // Exclude current player
+        if (player.id !== playerId) {
             const playerDiv = document.createElement("div");
             playerDiv.classList.add("user");
             playerDiv.innerText = player.name;
@@ -163,15 +158,9 @@ socket.on("updatePlayerList", function (players) {
                 socket.emit("challengePlayer", player.id);
             };
             playerListElement.appendChild(playerDiv);
-        } else { // Include current player
-            const currentPlayerDiv = document.createElement("div");
-            currentPlayerDiv.classList.add("user", "current-player");
-            currentPlayerDiv.innerText = player.name + " (You)";
-            playerListElement.appendChild(currentPlayerDiv);
         }
     });
 });
-
 
 socket.on("challengeReceived", function ({ challengerId, challengerName }) {
     const acceptChallenge = confirm(`${challengerName} has challenged you to a game. Do you accept?`);
@@ -183,8 +172,10 @@ socket.on("challengeReceived", function ({ challengerId, challengerName }) {
 socket.on("gameStart", function ({ gameId: id, role }) {
     gameId = id;
     playerRole = role;
+    // No need to call socket.join(gameId) on client-side, it's a server-side operation.
     renderBoard();
 });
+
 
 socket.on("boardState", function (fen) {
     chess.load(fen);
