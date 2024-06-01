@@ -147,13 +147,14 @@ const getPieceUnicode = (piece) => {
 };
 
 socket.on("setId", function (id) {
-    playerId = id;
+    playerId = id; // Set the player's ID
 });
+
 
 socket.on("updatePlayerList", function (players) {
     playerListElement.innerHTML = "";
     players.forEach(player => {
-        if (player.id !== playerId) {
+        if (player.id !== playerId) { // Exclude current player
             const playerDiv = document.createElement("div");
             playerDiv.classList.add("user");
             playerDiv.innerText = player.name;
@@ -161,9 +162,15 @@ socket.on("updatePlayerList", function (players) {
                 socket.emit("challengePlayer", player.id);
             };
             playerListElement.appendChild(playerDiv);
+        } else { // Include current player
+            const currentPlayerDiv = document.createElement("div");
+            currentPlayerDiv.classList.add("user", "current-player");
+            currentPlayerDiv.innerText = player.name + " (You)";
+            playerListElement.appendChild(currentPlayerDiv);
         }
     });
 });
+
 
 socket.on("challengeReceived", function ({ challengerId, challengerName }) {
     const acceptChallenge = confirm(`${challengerName} has challenged you to a game. Do you accept?`);
