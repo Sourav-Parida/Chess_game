@@ -73,11 +73,17 @@ io.on("connection", (socket) => {
         if (result) {
             io.to(gameId).emit("move", move);
             io.to(gameId).emit("boardState", chess.fen());
+            if (result.flags.includes("c")) {
+                io.to(gameId).emit("captureSound");
+            } else {
+                io.to(gameId).emit("moveSound");
+            }
         } else {
             socket.emit("invalidMove", "Invalid move!");
         }
     });
 
+    
     socket.on("disconnect", () => {
         console.log("Disconnected", socket.id);
         delete players[socket.id];

@@ -9,6 +9,7 @@ const playerListElement = document.getElementById("playerList");
 const captureSound = new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/capture.mp3");
 const moveSound = new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-self.mp3");
 
+
 let draggedPiece = null;
 let sourceSquare = null;
 let playerRole = null;
@@ -113,27 +114,34 @@ const handleMove = (source, target) => {
 
     const result = chess.move(move);
     if (result) {
+        // Emit "move" event to inform the server about the move
         socket.emit("move", { gameId, move });
         renderBoard();
-        if (result.flags.includes("c")) {
-            playCaptureSound();
-        } else {
-            playMoveSound();
-        }
     } else {
         console.error("Invalid move", move);
     }
 };
+    // Listen for move sound event
+    socket.on("moveSound", function() {
+        playMoveSound();
+    });
 
-function playCaptureSound() {
-    captureSound.currentTime = 0;
-    captureSound.play();
-}
+    // Listen for capture sound event
+    socket.on("captureSound", function() {
+        playCaptureSound();
+    });
 
-function playMoveSound() {
-    moveSound.currentTime = 0;
-    moveSound.play();
-}
+    function playCaptureSound() {
+        captureSound.currentTime = 0;
+        captureSound.play();
+    }
+    
+    function playMoveSound() {
+        moveSound.currentTime = 0;
+        moveSound.play();
+    }
+
+
 
 const getPieceUnicode = (piece) => {
     const unicodePieces = {
@@ -250,8 +258,8 @@ socket.on("gameStart", function ({ gameId: id, role, opponentName: oppName }) {
 function updatePlayerNames() {
     const whitePlayer = playerRole === "w" ? playerName : opponentName;
     const blackPlayer = playerRole === "b" ? playerName : opponentName;
-    document.getElementById("whitePlayerName").innerText = whitePlayer;
-    document.getElementById("blackPlayerName").innerText = blackPlayer;
+    document.getElementById("curr_playerName").innerText = playerName;
+    document.getElementById("opponentName").innerText = opponentName;
 }
 
 socket.on("boardState", function (fen) {
