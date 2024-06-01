@@ -7,7 +7,12 @@ const { v4: uuidv4 } = require("uuid");
 
 const app = express();
 const server = http.createServer(app);
-const io = socket(server);
+const io = socket(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
+});
 const PORT = process.env.PORT || 3000;
 
 app.set("views", path.join(__dirname, "views"));
@@ -25,7 +30,6 @@ const players = {};
 io.on("connection", (socket) => {
     console.log("Connected", socket.id);
 
-    // Send the player's ID to the client
     socket.emit("setId", socket.id);
 
     socket.on("setName", ({ name }) => {
@@ -42,7 +46,7 @@ io.on("connection", (socket) => {
         const gameId = uuidv4();
         const challenger = players[challengerId];
         const opponent = players[socket.id];
-    
+
         games[gameId] = {
             id: gameId,
             chess: new Chess(),
@@ -50,15 +54,13 @@ io.on("connection", (socket) => {
             blackPlayer: socket.id,
             spectators: [],
         };
-    
-        // Join both players to a room with the gameId
+
         socket.join(gameId);
-        io.to(challengerId).socketsJoin(gameId); // Make sure the challenger joins the game room
-    
+        io.to(challengerId).socketsJoin(gameId);
+
         io.to(challengerId).emit("gameStart", { gameId, role: "w" });
         io.to(socket.id).emit("gameStart", { gameId, role: "b" });
     });
-    
 
     socket.on("move", ({ gameId, move }) => {
         const game = games[gameId];

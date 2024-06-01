@@ -1,4 +1,4 @@
-const socket = io();
+const socket = io('https://chess-game-lemon.vercel.app/'); // Ensure this points to your deployed server
 const chess = new Chess();
 
 const boardElement = document.querySelector(".chessboard");
@@ -172,10 +172,8 @@ socket.on("challengeReceived", function ({ challengerId, challengerName }) {
 socket.on("gameStart", function ({ gameId: id, role }) {
     gameId = id;
     playerRole = role;
-    // No need to call socket.join(gameId) on client-side, it's a server-side operation.
     renderBoard();
 });
-
 
 socket.on("boardState", function (fen) {
     chess.load(fen);
