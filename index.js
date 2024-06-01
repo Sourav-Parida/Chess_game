@@ -1,5 +1,5 @@
 const express = require("express");
-const socket = require("socket.io");
+const socketIo = require("socket.io");
 const http = require("http");
 const { Chess } = require("chess.js");
 const path = require("path");
@@ -7,13 +7,13 @@ const { v4: uuidv4 } = require("uuid");
 
 const app = express();
 const server = http.createServer(app);
+
 const io = socketIo(server, {
     cors: {
-        origin: "https://chess-game-lemon.vercel.app/",
+        origin: process.env.CORS_ORIGIN || "http://localhost:3000",
         methods: ["GET", "POST"]
     }
 });
-
 
 const PORT = process.env.PORT || 3000;
 

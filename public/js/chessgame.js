@@ -1,4 +1,4 @@
-const socket = io('https://chess-game-lemon.vercel.app/', {
+const socket = io('/', {
     transports: ['websocket', 'polling']
 });
 

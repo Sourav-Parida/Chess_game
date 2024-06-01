@@ -1,22 +1,20 @@
 {
-    "name": "chess-app",
+    "name": "chess-game",
     "version": "1.0.0",
-    "description": "A simple multiplayer chess game",
-    "main": "index.js",
+    "description": "Chess game using Socket.IO",
+    "main": "server.js",
     "scripts": {
-        "start": "node app.js",
-        "dev": "nodemon app.js"
+      "start": "node server.js"
     },
     "dependencies": {
-        "chess": "^1.2.1",
-        "chess.js": "^1.0.0-beta.8",
-        "dotenv": "^10.0.0",
-        "ejs": "^3.1.10",
-        "express": "^4.17.1",
-        "socket.io": "^4.0.1",
-        "uuid": "^8.3.2"
+      "chess.js": "^0.10.3",
+      "ejs": "^3.1.6",
+      "express": "^4.17.1",
+      "socket.io": "^4.0.1",
+      "uuid": "^8.3.2"
     },
-    "devDependencies": {
-        "nodemon": "^2.0.7"
+    "engines": {
+      "node": ">=14.0.0"
     }
-}
+  }
+  
