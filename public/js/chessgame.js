@@ -272,10 +272,31 @@ socket.on("move", function (move) {
     renderBoard();
 });
 
-socket.on("gameOver", function (message) {
-    alert(message);
-    window.location.reload();
+// Handle the "gameOver" event
+socket.on("gameOver", ({ outcome, winnerId }) => {
+    let message;
+    if (outcome === "draw") {
+        message = "The game ended in a draw!";
+    } else if (winnerId === playerId) {
+        message = `Congratulations ${playerName}! You won!`;
+    } else {
+        message = `You lost! ${opponentName} won! Better luck next time!`;
+    }
+
+    // Display the outcome message
+    const outcomeElement = document.createElement("div");
+    outcomeElement.classList.add("outcome");
+    outcomeElement.textContent = message;
+    document.body.appendChild(outcomeElement);
+
+    // Reload the page after a delay
+    setTimeout(() => {
+        location.reload();
+    }, 10000); // Reload after 10 seconds (adjust as needed)
 });
+
+
+
 
 socket.on("requestName", function () {
     document.getElementById("nameModal").classList.remove("hidden");
