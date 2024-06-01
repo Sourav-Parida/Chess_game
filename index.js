@@ -25,13 +25,11 @@ const players = {};
 io.on("connection", (socket) => {
     console.log("Connected", socket.id);
 
-    // Send the player's ID to the client
-    socket.emit("setId", { id: socket.id, name: players[socket.id]?.name });
+    socket.emit("requestName");
 
     socket.on("setName", ({ name }) => {
         players[socket.id] = { id: socket.id, name: name };
         io.emit("updatePlayerList", Object.values(players));
-        socket.emit("setId", { id: socket.id, name: name }); // Emit the player's ID and name to the client
     });
 
     socket.on("challengePlayer", (opponentId) => {
@@ -43,7 +41,7 @@ io.on("connection", (socket) => {
         const gameId = uuidv4();
         const challenger = players[challengerId];
         const opponent = players[socket.id];
-    
+
         games[gameId] = {
             id: gameId,
             chess: new Chess(),
@@ -51,15 +49,13 @@ io.on("connection", (socket) => {
             blackPlayer: socket.id,
             spectators: [],
         };
-    
-        // Join both players to a room with the gameId
+
         socket.join(gameId);
-        io.to(challengerId).socketsJoin(gameId); // Make sure the challenger joins the game room
-    
+        io.to(challengerId).socketsJoin(gameId);
+
         io.to(challengerId).emit("gameStart", { gameId, role: "w" });
         io.to(socket.id).emit("gameStart", { gameId, role: "b" });
     });
-    
 
     socket.on("move", ({ gameId, move }) => {
         const game = games[gameId];

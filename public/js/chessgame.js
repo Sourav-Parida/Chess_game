@@ -5,9 +5,6 @@ const boardElement = document.querySelector(".chessboard");
 const labelBar = document.getElementById("labelBar");
 const rowLabels = document.getElementById("rowLabels");
 const playerListElement = document.getElementById("playerList");
-const currentPlayerElement = document.getElementById("currentPlayer");
-const whitePlayerElement = document.getElementById("whitePlayer");
-const blackPlayerElement = document.getElementById("blackPlayer");
 
 const captureSound = new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/capture.mp3");
 const moveSound = new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-self.mp3");
@@ -18,6 +15,14 @@ let playerRole = null;
 let gameId = null;
 let playerId = null;
 let playerName = null;
+
+document.getElementById("nameForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    const name = document.getElementById("nameInput").value;
+    playerName = name;
+    socket.emit("setName", { name: playerName });
+    document.getElementById("nameModal").classList.add("hidden");
+});
 
 const renderBoard = () => {
     const board = chess.board();
@@ -150,37 +155,43 @@ const getPieceUnicode = (piece) => {
 socket.on("setId", function ({ id, name }) {
     playerId = id;
     playerName = name;
-    currentPlayerElement.innerText = `Current Player: ${name}`;
 });
 
 socket.on("updatePlayerList", function (players) {
     playerListElement.innerHTML = "";
     players.forEach(player => {
+        const playerDiv = document.createElement("div");
+        playerDiv.classList.add("user");
+        playerDiv.innerText = player.name;
         if (player.id !== playerId) {
-            const playerDiv = document.createElement("div");
-            playerDiv.classList.add("user");
-            playerDiv.innerText = player.name;
-            if (player.name !== playerName) {
-                playerDiv.onclick = function () {
-                    socket.emit("challengePlayer", player.id);
-                };
-            }
-            playerListElement.appendChild(playerDiv);
+            playerDiv.onclick = function () {
+                socket.emit("challengePlayer", player.id);
+            };
         }
+        playerListElement.appendChild(playerDiv);
     });
 });
 
 socket.on("challengeReceived", function ({ challengerId, challengerName }) {
-    const acceptChallenge = confirm(`${challengerName} has challenged you to a game. Do you accept?`);
-    if (acceptChallenge) {
+    const acceptModal = document.getElementById("acceptModal");
+    const challengerText = document.getElementById("challengerText");
+    challengerText.innerText = `${challengerName} has challenged you to a game. Do you accept?`;
+
+    acceptModal.classList.remove("hidden");
+
+    document.getElementById("acceptButton").onclick = function () {
         socket.emit("acceptChallenge", { challengerId });
-    }
+        acceptModal.classList.add("hidden");
+    };
+
+    document.getElementById("declineButton").onclick = function () {
+        acceptModal.classList.add("hidden");
+    };
 });
 
 socket.on("gameStart", function ({ gameId: id, role }) {
     gameId = id;
     playerRole = role;
-    // No need to call socket.join(gameId) on client-side, it's a server-side operation.
     renderBoard();
 });
 
@@ -199,6 +210,6 @@ socket.on("gameOver", function (message) {
     window.location.reload();
 });
 
-// Prompt for the user's name and send it to the server
-playerName = prompt("Enter your name:");
-socket.emit("setName", { name: playerName });
+socket.on("requestName", function () {
+    document.getElementById("nameModal").classList.remove("hidden");
+});
