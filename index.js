@@ -9,8 +9,9 @@ const app = express();
 const server = http.createServer(app);
 const io = socket(server, {
     cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
+        origin: "*", // Allow all origins, adjust this based on your security requirements
+        methods: ["GET", "POST"],
+        credentials: true
     }
 });
 const PORT = process.env.PORT || 3000;
