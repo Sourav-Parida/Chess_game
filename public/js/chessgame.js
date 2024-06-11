@@ -68,6 +68,7 @@ const renderBoard = () => {
                 pieceElement.innerText = getPieceUnicode(square);
                 pieceElement.draggable = playerRole === square.color;
     
+                // Drag events for desktop
                 pieceElement.addEventListener("dragstart", (e) => {
                     if (pieceElement.draggable) {
                         draggedPiece = pieceElement;
@@ -80,6 +81,7 @@ const renderBoard = () => {
                     sourceSquare = null;
                 });
     
+                // Touch events for mobile
                 pieceElement.addEventListener("touchstart", (e) => {
                     if (pieceElement.draggable) {
                         draggedPiece = pieceElement;
@@ -88,14 +90,10 @@ const renderBoard = () => {
                     }
                 });
     
-                pieceElement.addEventListener("touchend", (e) => {
-                    draggedPiece = null;
-                    sourceSquare = null;
-                });
-    
                 squareElement.appendChild(pieceElement);
             }
     
+            // Allow dropping on squares
             squareElement.addEventListener("dragover", function (e) {
                 e.preventDefault();
             });
@@ -110,6 +108,7 @@ const renderBoard = () => {
                 }
             });
     
+            // Touch move and touch end for mobile
             squareElement.addEventListener("touchmove", function (e) {
                 e.preventDefault();
             });
@@ -125,13 +124,13 @@ const renderBoard = () => {
                         };
                         handleMove(sourceSquare, targetSquare);
                     }
+                    e.preventDefault();
                 }
             });
     
             boardElement.appendChild(squareElement);
         });
     });
-    
 
     if (playerRole === "b") {
         boardElement.classList.add("flipped");
