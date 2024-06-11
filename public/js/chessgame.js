@@ -55,10 +55,10 @@ const renderBoard = () => {
             squareElement.classList.add("square",
                 (rowIndex + squareIndex) % 2 === 0 ? "light" : "dark"
             );
-
+    
             squareElement.dataset.row = rowIndex;
             squareElement.dataset.col = squareIndex;
-
+    
             if (square) {
                 const pieceElement = document.createElement("div");
                 pieceElement.classList.add(
@@ -67,7 +67,7 @@ const renderBoard = () => {
                 );
                 pieceElement.innerText = getPieceUnicode(square);
                 pieceElement.draggable = playerRole === square.color;
-
+    
                 pieceElement.addEventListener("dragstart", (e) => {
                     if (pieceElement.draggable) {
                         draggedPiece = pieceElement;
@@ -79,8 +79,23 @@ const renderBoard = () => {
                     draggedPiece = null;
                     sourceSquare = null;
                 });
+    
+                pieceElement.addEventListener("touchstart", (e) => {
+                    if (pieceElement.draggable) {
+                        draggedPiece = pieceElement;
+                        sourceSquare = { row: rowIndex, col: squareIndex };
+                        e.preventDefault();
+                    }
+                });
+    
+                pieceElement.addEventListener("touchend", (e) => {
+                    draggedPiece = null;
+                    sourceSquare = null;
+                });
+    
                 squareElement.appendChild(pieceElement);
             }
+    
             squareElement.addEventListener("dragover", function (e) {
                 e.preventDefault();
             });
@@ -94,9 +109,29 @@ const renderBoard = () => {
                     handleMove(sourceSquare, targetSquare);
                 }
             });
+    
+            squareElement.addEventListener("touchmove", function (e) {
+                e.preventDefault();
+            });
+    
+            squareElement.addEventListener("touchend", function (e) {
+                if (draggedPiece) {
+                    const touch = e.changedTouches[0];
+                    const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
+                    if (targetElement && targetElement.classList.contains("square")) {
+                        const targetSquare = {
+                            row: parseInt(targetElement.dataset.row),
+                            col: parseInt(targetElement.dataset.col)
+                        };
+                        handleMove(sourceSquare, targetSquare);
+                    }
+                }
+            });
+    
             boardElement.appendChild(squareElement);
         });
     });
+    
 
     if (playerRole === "b") {
         boardElement.classList.add("flipped");
