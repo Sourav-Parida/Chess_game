@@ -84,6 +84,7 @@ const renderBoard = () => {
                 // Touch events for mobile
                 pieceElement.addEventListener("touchstart", (e) => {
                     if (pieceElement.draggable) {
+                        console.log('Touch start', rowIndex, squareIndex);
                         draggedPiece = pieceElement;
                         sourceSquare = { row: rowIndex, col: squareIndex };
                         e.preventDefault();
@@ -113,15 +114,18 @@ const renderBoard = () => {
                 e.preventDefault();
             });
     
-            squareElement.addEventListener("touchend", function (e) {
+            squareElement.addEventListener("touchend", (e) => {
+                console.log('Touch end');
                 if (draggedPiece) {
                     const touch = e.changedTouches[0];
                     const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
+                    console.log('Target element', targetElement);
                     if (targetElement && targetElement.classList.contains("square")) {
                         const targetSquare = {
                             row: parseInt(targetElement.dataset.row),
                             col: parseInt(targetElement.dataset.col)
                         };
+                        console.log('Target square', targetSquare);
                         handleMove(sourceSquare, targetSquare);
                     }
                     e.preventDefault();
